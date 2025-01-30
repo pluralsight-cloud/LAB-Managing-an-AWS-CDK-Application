@@ -12,79 +12,61 @@ export class LibraryAppStack extends cdk.Stack {
     super(scope, id, props);
 
     // DynamoDB table
-    const libraryTable = new dynamodb.TableV2(this, 'Library', {
+    const table = new dynamodb.TableV2(this, 'Library', {
       partitionKey: { name: 'book', type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
-    // IAM policy to work with DynamoDB
-    const libraryAPIDynamoDBPolicy = new iam.ManagedPolicy(this, 'LibraryAPIDynamoDBPolicy', {
-      managedPolicyName: 'LibraryAPIDynamoDBPolicy',
-      statements: [
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: [
-            "dynamodb:DeleteItem",
-            "dynamodb:GetItem",
-            "dynamodb:PutItem",
-            "dynamodb:Scan"
-          ],
-          resources: [ `arn:aws:dynamodb:${this.region}:${this.account}:table/*` ]
-        })
-      ]
-    });
-
     // IAM role for Lambda functions
-    const libraryAPILambdaRole = new iam.Role(this, 'LibraryAPILambdaRole', {
+    const apiLambdaRole = new iam.Role(this, 'APILambdaRole', {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [
-        iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
-        libraryAPIDynamoDBPolicy
+        iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')
       ],
     });
 
     // Lambda PUT function
-    const libraryPUTFunction = new lambda.Function(this, 'LibraryPUT', {
+    const putFunction = new lambda.Function(this, 'LibraryPUT', {
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('lambda/add-book'),
-      role: libraryAPILambdaRole,
+      role: apiLambdaRole,
       environment: {
-        TABLE_NAME: libraryTable.tableName,
+        TABLE_NAME: table.tableName,
       }
     });
 
     // Lambda GET function
-    const libraryGETFunction = new lambda.Function(this, 'LibraryGET', {
+    const getFunction = new lambda.Function(this, 'LibraryGET', {
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('lambda/get-book'),
-      role: libraryAPILambdaRole,
+      role: apiLambdaRole,
       environment: {
-        TABLE_NAME: libraryTable.tableName,
+        TABLE_NAME: table.tableName,
       }
     });
 
     // Lambda DELETE function
-    const libraryDELETEFunction = new lambda.Function(this, 'LibraryDELETE', {
+    const deleteFunction = new lambda.Function(this, 'LibraryDELETE', {
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('lambda/delete-book'),
-      role: libraryAPILambdaRole,
+      role: apiLambdaRole,
       environment: {
-        TABLE_NAME: libraryTable.tableName,
+        TABLE_NAME: table.tableName,
       }
     });
 
     // Grant DynamoDB permissions to the Lambda functions
-    libraryTable.grantReadWriteData(libraryPUTFunction);
-    libraryTable.grantReadWriteData(libraryGETFunction);
-    libraryTable.grantReadWriteData(libraryDELETEFunction);
+    table.grantReadWriteData(putFunction);
+    table.grantReadWriteData(getFunction);
+    table.grantReadWriteData(deleteFunction);
     
     // API Gateway setup
-    const libraryPUTIntegration = new HttpLambdaIntegration('LibraryPUTIntegration', libraryPUTFunction);
-    const libraryGETIntegration = new HttpLambdaIntegration('LibraryGETIntegration', libraryGETFunction);
-    const libraryDELETEIntegration = new HttpLambdaIntegration('LibraryDELETEIntegration', libraryDELETEFunction);
+    const libraryPUTIntegration = new HttpLambdaIntegration('LibraryPUTIntegration', putFunction);
+    const libraryGETIntegration = new HttpLambdaIntegration('LibraryGETIntegration', getFunction);
+    const libraryDELETEIntegration = new HttpLambdaIntegration('LibraryDELETEIntegration', deleteFunction);
 
     const libraryApi = new apigatewayv2.HttpApi(this, 'LibraryAPI', {
       apiName: 'Library API'
