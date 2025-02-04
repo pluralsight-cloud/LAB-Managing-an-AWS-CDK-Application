@@ -1,0 +1,36 @@
+// Insert mode
+i
+
+// Exit Insert mode (enter Normal mode)
+ESC
+
+// Save (from Normal mode)
+:w
+
+// Save and exit (from Normal mode)
+:wq
+SHIFT-ZZ
+
+// Exit without saving (from Normal mode)
+:q!
+
+// Add line above cursor (from Normal mode)
+O
+
+// Add line below cursor (from Normal mode)
+o
+
+// Delete character (from Normal mode)
+d
+
+// Delete line (from Normal mode)
+dd
+
+// Undo (from Normal mode)
+u
+
+// Find and replace (line that cursor is on, from Normal mode)
+:s/FIND/REPLACE/g
+
+// Find and replace (all file, from Normal mode)
+:%s/FIND/REPLACE/g

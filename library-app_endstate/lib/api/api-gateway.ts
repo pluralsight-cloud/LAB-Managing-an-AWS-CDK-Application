@@ -8,17 +8,17 @@ export class LibraryAPIStack extends cdk.Stack {
   constructor(
     scope: Construct,
     id: string,
-    putLambda: lambda.Function,
-    getLambda: lambda.Function,
-    deleteLambda: lambda.Function,
+    putFunction: lambda.Function,
+    getFunction: lambda.Function,
+    deleteFunction: lambda.Function,
     props?: cdk.StackProps
   ) {
     super(scope, id, props);
 
     // API Gateway setup
-    const libraryPutIntegration = new HttpLambdaIntegration('LibraryPUTIntegration', putLambda);
-    const libraryGetIntegration = new HttpLambdaIntegration('LibraryGETIntegration', getLambda);
-    const libraryDeleteIntegration = new HttpLambdaIntegration('LibraryDELETEIntegration', deleteLambda);
+    const libraryPutIntegration = new HttpLambdaIntegration('LibraryPUTIntegration', putFunction);
+    const libraryGetIntegration = new HttpLambdaIntegration('LibraryGETIntegration', getFunction);
+    const libraryDeleteIntegration = new HttpLambdaIntegration('LibraryDELETEIntegration', deleteFunction);
 
     const libraryApi = new apigatewayv2.HttpApi(this, 'LibraryAPI', {
       apiName: 'Library API'
